@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: presto-coordinator
+spec:
+  ports:
+    - name: client
+      port: 8080
+  selector:
+    app: presto-coordinator
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: presto-coordinator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: presto-coordinator
+    spec:
+      containers:
+        - name: presto-coordinator
+          image: thiagodiogo/docker-presto:0.214
+          imagePullPolicy: Always
+          env:
+            - name: CONFIG_CONF_DISCOVERY___SERVER_ENABLED
+              value: "true"
+            - name: JVM_CONF_XMS
+              value: "8G"
+            - name: JVM_CONF_XMX
+              value: "12G"
+            - name: HIVE_CONF_HIVE_METASTORE_URI
+              value: thrift://hive-metastore.presto:9083
+            - name: LOG_CONF_COM_FACEBOOK_PRESTO
+              value: INFO
+          ports:
+            - containerPort: 8080
+            - containerPort: 8889
+          resources:
+            requests:
+              memory: "8Gi"
+            limits:
+              memory: "12Gi"
