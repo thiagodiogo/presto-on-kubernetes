@@ -1,0 +1,127 @@
+kind: "Service"
+apiVersion: v1
+metadata:
+  name: redash-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: redash
+  ports:
+    - name: http
+      port: 80
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redash
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redash
+    spec:
+      containers:
+        - name: redash-web
+          image: redash/redash
+          resources:
+            requests:
+              memory: 1Gi
+          ports:
+            - name: redash-http
+              containerPort: 5000
+          env:
+            - name: REDASH_DATABASE_URL
+              value: "postgresql://hive:password@postgresql.presto/redash"
+            - name: REDASH_REDIS_URL
+              value: "redis://redis-svc.presto:6379/0"
+            - name: PYTHONUNBUFFERED
+              value: "0"
+            - name: REDASH_COOKIE_SECRET
+              value: "nanitsecretlongonehere"
+            - name: REDASH_HOST
+              value: ""
+            - name: REDASH_NAME
+              value: ""
+            - name: REDASH_MAIL_SERVER
+              value: ""
+            - name: REDASH_MAIL_PORT
+              value: "657"
+            - name: REDASH_MAIL_USERNAME
+              value: "test"
+            - name: REDASH_MAIL_PASSWORD
+              value: "test2"
+            - name: REDASH_MAIL_DEFAULT_SENDER
+              value: ""
+          args: ["server"]
+        - name: redash-workers
+          image: redash/redash
+          resources:
+            requests:
+              memory: 1Gi
+          env:
+            - name: REDASH_DATABASE_URL
+              value: "postgresql://hive:password@postgresql.presto/redash"
+            - name: REDASH_REDIS_URL
+              value: "redis://redis-svc.presto:6379/0"
+            - name: PYTHONUNBUFFERED
+              value: "0"
+            - name: REDASH_COOKIE_SECRET
+              value: "nanitsecretlongonehere"
+            - name: REDASH_HOST
+              value: ""
+            - name: REDASH_NAME
+              value: ""
+            - name: REDASH_MAIL_SERVER
+              value: ""
+            - name: REDASH_MAIL_PORT
+              value: "657"
+            - name: REDASH_MAIL_USERNAME
+              value: "test"
+            - name: REDASH_MAIL_PASSWORD
+              value: "test2"
+            - name: REDASH_MAIL_DEFAULT_SENDER
+              value: ""
+          args: ["scheduler"]
+
+        - name: nginx
+          image: nginx
+          ports:
+            - name: nginx
+              containerPort: 80
+
+        # - name: redis
+        #   image: redis:3.0-alpine
+        #   ports:
+        #     - name: redis
+        #       containerPort: 6379
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-svc
+spec:
+  ports:
+    - name: client
+      port: 6379
+  selector:
+    app: redis
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:3.0-alpine
+          ports:
+            - name: redis
+              containerPort: 6379
