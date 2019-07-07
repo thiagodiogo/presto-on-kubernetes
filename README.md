@@ -16,6 +16,14 @@
 
 4. Install Hive Metastore node it in your K8s cluster:
 
+4.1 Prepare the `Hive metastore DB`:
+
+- Check the version you will install here: https://github.com/apache/hive/tree/master/metastore/scripts/upgrade/postgres
+- Change the `metastore-db-setup.sh` script to your desired version (in my case it was `2.3.0`).
+- Run the SH pointing to your DB: `./metastore-db-setup.sh`
+
+4.2 Install the `ReplicationController`:
+
 `kubectl apply -f metastore.yaml --namespace presto`
 
 5. Install Presto Coordinator and Workers in your K8s cluster:
